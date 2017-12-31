@@ -46,10 +46,14 @@ All text above, and the splash screen must be included in any redistribution
   #undef USE_FAST_PINIO  
 #endif
 
+// LCD Dimensions
+#define SHARPMEM_LCDWIDTH       (128)
+#define SHARPMEM_LCDHEIGHT      (128) 
+#define SHARPMEM_LCDDEPTH       (3)
 
 class Adafruit_SharpMem : public Adafruit_GFX {
  public:
-  Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss, uint16_t w = 96, uint16_t h = 96);
+  Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss);
   boolean begin();
   void drawPixel(int16_t x, int16_t y, uint16_t color);
   uint8_t getPixel(uint16_t x, uint16_t y);

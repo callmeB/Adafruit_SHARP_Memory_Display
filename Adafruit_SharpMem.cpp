@@ -52,8 +52,8 @@ byte *sharpmem_buffer;
 /* ************* */
 /* CONSTRUCTORS  */
 /* ************* */
-Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss, uint16_t width, uint16_t height) :
-Adafruit_GFX(width, height) {
+Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss) :
+Adafruit_GFX(SHARPMEM_LCDWIDTH, SHARPMEM_LCDHEIGHT) {
   _clk  = clk;
   _mosi = mosi;
   _ss   = ss;
@@ -80,7 +80,7 @@ boolean Adafruit_SharpMem::begin(void) {
   _sharpmem_vcom = SHARPMEM_BIT_VCOM;
 
 
-  sharpmem_buffer = (byte *)malloc((WIDTH * HEIGHT) / 8);
+  sharpmem_buffer = (byte *)malloc((SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT * SHARPMEM_LCDDEPTH) / 8);
 
   if (!sharpmem_buffer) return false;
 
@@ -213,12 +213,14 @@ void Adafruit_SharpMem::drawPixel(int16_t x, int16_t y, uint16_t color)
     break;
   }
 
-  if(color) {
-    sharpmem_buffer[(y * WIDTH + x) / 8] |=
-      pgm_read_byte(&set[x & 7]);
-  } else {
-    sharpmem_buffer[(y * WIDTH + x) / 8] &=
-      pgm_read_byte(&clr[x & 7]);
+  for(int i = 0; i < SHARPMEM_LCDDEPTH; i++){
+    if(color & set[i]) {
+      sharpmem_buffer[((y*SHARPMEM_LCDWIDTH + x)*SHARPMEM_LCDDEPTH + i) / 8] |=
+        pgm_read_byte(&set[(x*SHARPMEM_LCDDEPTH+i) & 7]);
+    } else {
+      sharpmem_buffer[((y*SHARPMEM_LCDWIDTH + x)*SHARPMEM_LCDDEPTH + i) / 8] &=
+        pgm_read_byte(&clr[(x*SHARPMEM_LCDDEPTH+i) & 7]);
+    }
   }
 }
 
@@ -253,8 +255,8 @@ uint8_t Adafruit_SharpMem::getPixel(uint16_t x, uint16_t y)
     break;
   }
 
-  return sharpmem_buffer[(y * WIDTH + x) / 8] &
-    pgm_read_byte(&set[x & 7]) ? 1 : 0;
+  return sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x)*SHARPMEM_LCDDEPTH / 8] &
+    pgm_read_byte(&set[x*SHARPMEM_LCDDEPTH & 7]) ? 1 : 0;
 }
 
 /**************************************************************************/
@@ -264,7 +266,7 @@ uint8_t Adafruit_SharpMem::getPixel(uint16_t x, uint16_t y)
 /**************************************************************************/
 void Adafruit_SharpMem::clearDisplay() 
 {
-  memset(sharpmem_buffer, 0xff, (WIDTH * HEIGHT) / 8);
+  memset(sharpmem_buffer, 0xff, (SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT * SHARPMEM_LCDDEPTH) / 8);
   // Send the clear screen command rather than doing a HW refresh (quicker)
   digitalWrite(_ss, HIGH);
   sendbyte(_sharpmem_vcom | SHARPMEM_BIT_CLEAR);
@@ -281,7 +283,7 @@ void Adafruit_SharpMem::clearDisplay()
 void Adafruit_SharpMem::refresh(void) 
 {
   uint16_t i, totalbytes, currentline, oldline;  
-  totalbytes = (WIDTH * HEIGHT) / 8;
+  totalbytes = (SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT * SHARPMEM_LCDDEPTH) / 8;
 
   // Send the write command
   digitalWrite(_ss, HIGH);
@@ -296,12 +298,12 @@ void Adafruit_SharpMem::refresh(void)
   for (i=0; i<totalbytes; i++)
   {
     sendbyteLSB(sharpmem_buffer[i]);
-    currentline = ((i+1)/(WIDTH/8)) + 1;
+    currentline = ((i+1)/(SHARPMEM_LCDWIDTH*SHARPMEM_LCDDEPTH/8)) + 1;
     if(currentline != oldline)
     {
       // Send end of line and address bytes
       sendbyteLSB(0x00);
-      if (currentline <= HEIGHT)
+      if (currentline <= SHARPMEM_LCDHEIGHT)
       {
         sendbyteLSB(currentline);
       }
