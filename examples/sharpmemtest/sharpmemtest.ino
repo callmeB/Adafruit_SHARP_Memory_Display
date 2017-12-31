@@ -24,15 +24,21 @@ All text above, must be included in any redistribution
 #define SHARP_MOSI 11
 #define SHARP_SS   10
 
-// Set the size of the display here, e.g. 144x168!
-Adafruit_SharpMem display(SHARP_SCK, SHARP_MOSI, SHARP_SS, 144, 168);
-// The currently-available SHARP Memory Display (144x168 pixels)
+Adafruit_SharpMem display(SHARP_SCK, SHARP_MOSI, SHARP_SS);
 // requires > 4K of microcontroller RAM; it WILL NOT WORK on Arduino Uno
 // or other <4K "classic" devices!  The original display (96x96 pixels)
 // does work there, but is no longer produced.
 
-#define BLACK 0
-#define WHITE 1
+#define BLACK   0
+#define WHITE   7
+
+#define RED     1
+#define GREEN   2
+#define BLUE    4
+
+#define YELLOW  3
+#define MAGENTA 5
+#define CYAN    6
 
 int minorHalfSize; // 1/2 of lesser of display width or height
 
@@ -107,24 +113,26 @@ void setup(void)
 
 void loop(void) 
 {
-  for(int i=0; i<4; i++) {
-    display.setRotation(i);
-    display.clearDisplay();
-    // text display tests
-    display.setTextSize(1);
-    display.setTextColor(BLACK);
-    display.setCursor(0,0);
-    display.println("Hello, world!");
-    display.setTextColor(WHITE, BLACK); // inverted text
-    display.println(3.141592);
-    display.setTextSize(2);
-    display.setTextColor(BLACK);
-    display.print("0x"); display.println(0xDEADBEEF, HEX);
-    // Screen must be refreshed at least once per second
-    for(int j=0; j<4; j++) {
-      display.refresh();
-      delay(500); // 1/2 sec delay
-    } // x4 = 2 second pause between rotations
+  for(int color=0; color<8; color++) {
+    for(int i=0; i<4; i++) {
+      display.setRotation(i);
+      display.clearDisplay();
+      // text display tests
+      display.setTextSize(1);
+      display.setTextColor(color);
+      display.setCursor(0,0);
+      display.println("Hello, world!");
+      display.setTextColor(color^7, color); // inverted text (flip last 3 bits)
+      display.println(3.141592);
+      display.setTextSize(2);
+      display.setTextColor(color);
+      display.print("0x"); display.println(0xDEADBEEF, HEX);
+      // Screen must be refreshed at least once per second
+      for(int j=0; j<4; j++) {
+        display.refresh();
+        delay(500); // 1/2 sec delay
+      } // x4 = 2 second pause between rotations
+    }
   }
 }
 
@@ -143,33 +151,33 @@ void testdrawline() {
 
   display.clearDisplay();
   for (int i=0; i<display.width(); i+=4) {
-    display.drawLine(0, display.height()-1, i, 0, BLACK);
+    display.drawLine(0, display.height()-1, i, 0, RED);
     display.refresh();
   }
   for (int i=display.height()-1; i>=0; i-=4) {
-    display.drawLine(0, display.height()-1, display.width()-1, i, BLACK);
+    display.drawLine(0, display.height()-1, display.width()-1, i, GREEN);
     display.refresh();
   }
   delay(250);
 
   display.clearDisplay();
   for (int i=display.width()-1; i>=0; i-=4) {
-    display.drawLine(display.width()-1, display.height()-1, i, 0, BLACK);
+    display.drawLine(display.width()-1, display.height()-1, i, 0, BLUE);
     display.refresh();
   }
   for (int i=display.height()-1; i>=0; i-=4) {
-    display.drawLine(display.width()-1, display.height()-1, 0, i, BLACK);
+    display.drawLine(display.width()-1, display.height()-1, 0, i, YELLOW);
     display.refresh();
   }
   delay(250);
 
   display.clearDisplay();
   for (int i=0; i<display.height(); i+=4) {
-    display.drawLine(display.width()-1, 0, 0, i, BLACK);
+    display.drawLine(display.width()-1, 0, 0, i, MAGENTA);
     display.refresh();
   }
   for (int i=0; i<display.width(); i+=4) {
-    display.drawLine(display.width()-1, 0, i, display.height()-1, BLACK);
+    display.drawLine(display.width()-1, 0, i, display.height()-1, CYAN);
     display.refresh();
   }
   delay(250);
