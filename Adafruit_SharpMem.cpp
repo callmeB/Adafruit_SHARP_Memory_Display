@@ -268,11 +268,12 @@ void Adafruit_SharpMem::clearDisplay()
 {
   memset(sharpmem_buffer, 0xff, (SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT * SHARPMEM_LCDDEPTH) / 8);
   // Send the clear screen command rather than doing a HW refresh (quicker)
-  digitalWrite(_ss, HIGH);
+  // Remove clear command to fix flickering
+  /*digitalWrite(_ss, HIGH);
   sendbyte(_sharpmem_vcom | SHARPMEM_BIT_CLEAR);
   sendbyteLSB(0x00);
   TOGGLE_VCOM;
-  digitalWrite(_ss, LOW);
+  digitalWrite(_ss, LOW);*/
 }
 
 /**************************************************************************/
